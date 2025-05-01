@@ -1,10 +1,71 @@
-# Template Repo
-Template for new KBase repositories
-For further info on using the KBase default repo template, 
-please see the [KBase Build & Release Guide](https://github.com/kbase/.github/tree/main/guide).
+# CDM MCP Server
 
-## To Do:
+A FastAPI-based service that enables AI assistants to interact with Delta Lake tables stored in MinIO through Spark, implementing the Model Context Protocol (MCP) for natural language data operations.
 
-- [ ] Update this README.md with info about your repository
-- [ ] Modify `Dockerfile` with needed steps (assuming repo produces a Docker image)
-- [ ] Ensure all [branch rules](https://github.com/kbase/.github/blob/develop/guide/enable-branch-rules.md) & [status checks](https://github.com/kbase/.github/blob/develop/guide/enable-branch-rules.md#require-status-checks) are enabled
+
+## Quick Start
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kbase/cdm-mcp-server.git
+   cd cdm-mcp-server
+   ```
+
+2. Create required directories:
+   ```bash
+   mkdir -p cdr/cdm/jupyter/cdm_shared_workspace
+   ```
+
+3. Create Docker network:
+   ```bash
+   docker network create cdm-jupyterhub-network
+   ```
+
+4. Start the services:
+   ```bash
+   docker-compose up -d
+   ```
+
+5. Access the services:
+   - MCP Server: http://localhost:8000/docs
+   - MinIO Console: http://localhost:9003
+   - Spark Master UI: http://localhost:8090
+
+## API Documentation
+
+The MCP Server provides the following endpoints:
+
+**(WIP)**
+- `GET /delta/tables/list` - List available Delta tables
+- `GET /delta/tables/read` - Read data from a Delta table
+- `GET /delta/tables/schema` - Get schema for a Delta table
+
+For detailed API documentation, visit http://localhost:8000/docs
+
+## AI Assistant Integration
+
+### Cursor Integration
+
+1. Open Cursor settings
+2. Navigate to MCP section
+3. Add MCP server URL: http://localhost:8000/mcp
+4. Test connection
+
+### Example Prompts
+
+```markdown
+1. "List all Delta tables in my MinIO storage"
+2. "Show me the schema of the products table"
+3. "Read the first 10 rows from the employees table"
+4. "Find products with price > 100"
+```
+
+### Testing
+
+```bash
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=src tests/
+```
