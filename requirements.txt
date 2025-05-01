@@ -1,0 +1,8 @@
+fastapi==0.115.12
+uvicorn==0.34.2
+fastapi-mcp==0.3.3
+pyspark==3.5.5
+delta-spark==3.2.0
+aiohttp==3.11.18
+cacheout==0.16.0
+minio==7.2.15
