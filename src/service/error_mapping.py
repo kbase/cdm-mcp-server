@@ -47,15 +47,15 @@ _ERR_MAP = {
     InvalidTokenError: ErrorMapping(ErrorType.INVALID_TOKEN, _H401),
     MissingRoleError: ErrorMapping(ErrorType.MISSING_ROLE, _H403),
     AuthenticationError: ErrorMapping(ErrorType.AUTHENTICATION_FAILED, _H401),
-    
     # Delta Lake specific errors
     InvalidS3PathError: ErrorMapping(ErrorType.INVALID_S3_PATH, _H400),
     DeltaTableNotFoundError: ErrorMapping(ErrorType.DELTA_TABLE_NOT_FOUND, _H404),
     DeltaSchemaError: ErrorMapping(ErrorType.DELTA_SCHEMA_ERROR, _H400),
     S3AccessError: ErrorMapping(ErrorType.S3_ACCESS_ERROR, _H400),
-    DeltaTableOperationError: ErrorMapping(ErrorType.DELTA_TABLE_OPERATION_ERROR, _H400),
+    DeltaTableOperationError: ErrorMapping(
+        ErrorType.DELTA_TABLE_OPERATION_ERROR, _H400
+    ),
     DeltaLakeError: ErrorMapping(ErrorType.DELTA_LAKE_ERROR, _H400),
-    
     # Base error fallback
     MCPServerError: ErrorMapping(None, status.HTTP_500_INTERNAL_SERVER_ERROR),
 }

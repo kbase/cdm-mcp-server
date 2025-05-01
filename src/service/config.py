@@ -20,11 +20,13 @@ class Settings(BaseModel):
     """
 
     app_name: str = "CDM MCP Server"
-    app_description: str = "FastAPI service for AI assistants to interact with Delta Lake tables via Spark"
+    app_description: str = (
+        "FastAPI service for AI assistants to interact with Delta Lake tables via Spark"
+    )
     api_version: str = APP_VERSION
     log_level: str = Field(
         default=os.getenv("LOG_LEVEL", "INFO"),
-        description="Logging level for the application"
+        description="Logging level for the application",
     )
 
 
