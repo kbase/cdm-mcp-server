@@ -23,7 +23,7 @@ A FastAPI-based service that enables AI assistants to interact with Delta Lake t
 
 4. Start the services:
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
 5. Access the services:
