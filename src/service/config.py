@@ -43,13 +43,14 @@ def get_settings() -> Settings:
 def configure_logging():
     """Configure logging for the application."""
     settings = get_settings()
-    if settings.log_level.upper() not in logging.getLevelNamesMapping():
-        logging.warning(
-            "Unrecognized log level '%s'. Falling back to 'INFO'.",
-            settings.log_level,
-        )
     log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
     logging.basicConfig(
         level=log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
+
+    if settings.log_level.upper() not in logging.getLevelNamesMapping():
+        logging.warning(
+            "Unrecognized log level '%s'. Falling back to 'INFO'.",
+            settings.log_level,
+        )
