@@ -1,7 +1,11 @@
-FROM --platform=linux/amd64 ghcr.io/kbase/cdm-spark-standalone:pr-28
+FROM ghcr.io/kbase/cdm-spark-standalone:pr-28
 
 # Switch to root to install packages
 USER root
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV SPARK_JARS_DIR=/opt/bitnami/spark/jars
 
@@ -26,4 +30,4 @@ RUN chmod a+x /opt/scripts/*.sh
 # Switch back to non-root user
 USER spark_user
 
-CMD ["python", "-m", "src.main"] 
+CMD ["python", "-m", "src.main"]
