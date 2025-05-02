@@ -4,6 +4,7 @@ FROM ghcr.io/kbase/cdm-spark-standalone:pr-28
 USER root
 
 RUN apt-get update && apt-get install -y \
+    # required for psycopg
     libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
