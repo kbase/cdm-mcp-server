@@ -1,4 +1,4 @@
-FROM ghcr.io/kbase/cdm-spark-standalone:pr-28
+FROM ghcr.io/kbase/cdm-spark-standalone:pr-29
 
 # Switch to root to install packages
 USER root
