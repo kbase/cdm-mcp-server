@@ -35,6 +35,20 @@ def _format_output(data: Any, return_json: bool = True) -> Union[str, Any]:
     return json.dumps(data) if return_json else data
 
 
+def _get_tables_with_schemas(
+    db: str, tables: List[str], spark: SparkSession
+) -> Dict[str, Any]:
+    """
+    Get schemas for a list of tables in a database.
+    """
+    return {
+        table: get_table_schema(
+            database=db, table=table, spark=spark, return_json=False
+        )
+        for table in tables
+    }
+
+
 def get_databases(
     spark: Optional[SparkSession] = None,
     use_postgres: bool = True,
@@ -160,13 +174,8 @@ def get_db_structure(
 
         for db in databases:
             tables = get_tables(database=db, spark=session, return_json=False)
-            if with_schema:
-                db_structure[db] = {
-                    table: get_table_schema(
-                        database=db, table=table, spark=session, return_json=False
-                    )
-                    for table in tables
-                }
+            if with_schema and isinstance(tables, list):
+                db_structure[db] = _get_tables_with_schemas(db, tables, session)
             else:
                 db_structure[db] = tables
 
@@ -178,22 +187,12 @@ def get_db_structure(
 
         for db in databases:
             tables = hive_metastore.get_tables(db)
-            if with_schema:
+            if with_schema and isinstance(tables, list):
                 if spark is None:
                     with get_spark_session() as spark:
-                        db_structure[db] = {
-                            table: get_table_schema(
-                                database=db, table=table, spark=spark, return_json=False
-                            )
-                            for table in tables
-                        }
+                        db_structure[db] = _get_tables_with_schemas(db, tables, spark)
                 else:
-                    db_structure[db] = {
-                        table: get_table_schema(
-                            database=db, table=table, spark=spark, return_json=False
-                        )
-                        for table in tables
-                    }
+                    db_structure[db] = _get_tables_with_schemas(db, tables, spark)
             else:
                 db_structure[db] = tables
 
