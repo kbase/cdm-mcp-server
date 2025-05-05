@@ -200,3 +200,33 @@ def get_db_structure(
         db_structure = _execute_with_spark(_get_structure, spark)
 
     return _format_output(db_structure, return_json)
+
+
+def is_database_exists(
+    database: str,
+    spark: Optional[SparkSession] = None,
+    use_postgres: bool = True,
+) -> bool:
+    """
+    Check if a database exists in the Hive metastore.
+    """
+    return database in get_databases(
+        spark=spark, use_postgres=use_postgres, return_json=False
+    )
+
+
+def is_table_exists(
+    database: str,
+    table: str,
+    spark: Optional[SparkSession] = None,
+    use_postgres: bool = True,
+) -> bool:
+    """
+    Check if a table exists in a database.
+    """
+    return table in get_tables(
+        database=database,
+        spark=spark,
+        use_postgres=use_postgres,
+        return_json=False,
+    )
