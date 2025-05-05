@@ -9,6 +9,18 @@ class MCPServerError(Exception):
     """
 
 
+class SparkSessionError(MCPServerError):
+    """
+    An error thrown when there is an issue initializing or accessing the Spark session.
+    """
+
+
+class SparkOperationError(SparkSessionError):
+    """
+    An error thrown when a Spark operation fails.
+    """
+
+
 class AuthenticationError(MCPServerError):
     """
     Super class for authentication related errors.
@@ -54,6 +66,12 @@ class InvalidS3PathError(DeltaLakeError):
 class DeltaTableNotFoundError(DeltaLakeError):
     """
     An error thrown when a Delta table is not found at the specified path.
+    """
+
+
+class DeltaDatabaseNotFoundError(DeltaLakeError):
+    """
+    An error thrown when a Delta database is not found.
     """
 
 

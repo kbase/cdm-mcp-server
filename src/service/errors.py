@@ -39,14 +39,23 @@ class ErrorType(Enum):
     DELTA_TABLE_NOT_FOUND = (20020, "Delta table not found")
     """ The Delta table was not found at the specified path. """
 
-    DELTA_SCHEMA_ERROR = (20030, "Delta schema error")
+    DELTA_DATABASE_NOT_FOUND = (20030, "Delta database not found")
+    """ The Delta database was not found. """
+
+    DELTA_SCHEMA_ERROR = (20040, "Delta schema error")
     """ There is an issue with the Delta table schema. """
 
-    S3_ACCESS_ERROR = (20040, "S3 access error")
+    S3_ACCESS_ERROR = (20050, "S3 access error")
     """ There was an error accessing S3 storage. """
 
-    DELTA_TABLE_OPERATION_ERROR = (20050, "Delta table operation error")
+    DELTA_TABLE_OPERATION_ERROR = (20060, "Delta table operation error")
     """ An operation on a Delta table failed. """
+
+    SPARK_SESSION_ERROR = (20070, "Spark session error")
+    """ There was an error initializing or accessing the Spark session. """
+
+    SPARK_OPERATION_ERROR = (20080, "Spark operation error")
+    """ There was an error executing a Spark operation. """
 
     REQUEST_VALIDATION_FAILED = (30010, "Request validation failed")
     """ A request to a service failed validation of the request. """
