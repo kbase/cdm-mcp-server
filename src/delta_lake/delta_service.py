@@ -6,7 +6,7 @@ import logging
 
 from pyspark.sql import SparkSession
 
-from src.delta_lake.data_store import is_database_exists, is_table_exists
+from src.delta_lake.data_store import database_exists, table_exists
 from src.service.exceptions import (
     DeltaDatabaseNotFoundError,
     DeltaTableNotFoundError,
@@ -20,9 +20,9 @@ def _check_exists(database: str, table: str) -> bool:
     """
     Check if a table exists in a database.
     """
-    if not is_database_exists(database):
+    if not database_exists(database):
         raise DeltaDatabaseNotFoundError(f"Database [{database}] not found")
-    if not is_table_exists(database, table):
+    if not table_exists(database, table):
         raise DeltaTableNotFoundError(
             f"Table [{table}] not found in database [{database}]"
         )

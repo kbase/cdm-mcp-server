@@ -202,7 +202,7 @@ def get_db_structure(
     return _format_output(db_structure, return_json)
 
 
-def is_database_exists(
+def database_exists(
     database: str,
     spark: Optional[SparkSession] = None,
     use_postgres: bool = True,
@@ -215,7 +215,7 @@ def is_database_exists(
     )
 
 
-def is_table_exists(
+def table_exists(
     database: str,
     table: str,
     spark: Optional[SparkSession] = None,
