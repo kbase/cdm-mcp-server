@@ -18,6 +18,21 @@ logger = logging.getLogger(__name__)
 
 MAX_SAMPLE_ROWS = 1000
 
+# Common SQL keywords that might indicate destructive operations
+FORBIDDEN_KEYWORDS = {
+    "drop",
+    "truncate",
+    "delete",
+    "insert",
+    "update",
+    "create",
+    "alter",
+    "merge",
+    "replace",
+    "rename",
+    "vacuum",
+}
+
 
 def _check_exists(database: str, table: str) -> bool:
     """
@@ -92,6 +107,9 @@ def sample_delta_table(
         if columns:
             df = df.select(columns)
         if where_clause:
+            for keyword in FORBIDDEN_KEYWORDS:
+                if keyword in where_clause.lower():
+                    raise ValueError(f"Filter expression contains forbidden keyword: {keyword}")
             df = df.filter(where_clause)
 
         df = df.limit(limit)
