@@ -11,6 +11,7 @@ from fastapi import status
 from src.service.errors import ErrorType
 from src.service.exceptions import (
     AuthenticationError,
+    DeltaDatabaseNotFoundError,
     DeltaLakeError,
     DeltaSchemaError,
     DeltaTableNotFoundError,
@@ -22,12 +23,15 @@ from src.service.exceptions import (
     MissingRoleError,
     MissingTokenError,
     S3AccessError,
+    SparkOperationError,
+    SparkSessionError,
 )
 
 _H400 = status.HTTP_400_BAD_REQUEST
 _H401 = status.HTTP_401_UNAUTHORIZED
 _H403 = status.HTTP_403_FORBIDDEN
 _H404 = status.HTTP_404_NOT_FOUND
+_H503 = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 class ErrorMapping(NamedTuple):
@@ -50,12 +54,15 @@ _ERR_MAP = {
     # Delta Lake specific errors
     InvalidS3PathError: ErrorMapping(ErrorType.INVALID_S3_PATH, _H400),
     DeltaTableNotFoundError: ErrorMapping(ErrorType.DELTA_TABLE_NOT_FOUND, _H404),
+    DeltaDatabaseNotFoundError: ErrorMapping(ErrorType.DELTA_DATABASE_NOT_FOUND, _H404),
     DeltaSchemaError: ErrorMapping(ErrorType.DELTA_SCHEMA_ERROR, _H400),
     S3AccessError: ErrorMapping(ErrorType.S3_ACCESS_ERROR, _H400),
     DeltaTableOperationError: ErrorMapping(
         ErrorType.DELTA_TABLE_OPERATION_ERROR, _H400
     ),
     DeltaLakeError: ErrorMapping(ErrorType.DELTA_LAKE_ERROR, _H400),
+    SparkSessionError: ErrorMapping(ErrorType.SPARK_SESSION_ERROR, _H503),
+    SparkOperationError: ErrorMapping(ErrorType.SPARK_OPERATION_ERROR, _H503),
     # Base error fallback
     MCPServerError: ErrorMapping(None, status.HTTP_500_INTERNAL_SERVER_ERROR),
 }
