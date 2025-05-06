@@ -109,7 +109,11 @@ def sample_delta_table(
         if where_clause:
             for keyword in FORBIDDEN_KEYWORDS:
                 if keyword in where_clause.lower():
-                    raise ValueError(f"Filter expression contains forbidden keyword: {keyword}")
+                    raise ValueError(
+                        f"Filter expression contains forbidden keyword: {keyword}"
+                    )
+            # TODO: build additional validation for query to ensure it is read only
+
             df = df.filter(where_clause)
 
         df = df.limit(limit)
@@ -122,3 +126,32 @@ def sample_delta_table(
         raise SparkOperationError(
             f"Failed to sample rows from {full_table_name}: {str(e)}"
         )
+
+
+def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
+    """
+    Executes a SQL query against a specific Delta table after basic validation.
+
+    Args:
+        spark: The SparkSession object.
+        query: The SQL query string to execute.
+
+    Returns:
+        A list of dictionaries, where each dictionary represents a row.
+    """
+
+    for keyword in FORBIDDEN_KEYWORDS:
+        if keyword in query.lower():
+            raise ValueError(f"Query contains forbidden keyword: {keyword}")
+
+    # TODO: build additional validation for query to ensure it is read only
+
+    logger.info(f"Executing validated query: {query}")
+    try:
+        df = spark.sql(query)
+        results = [row.asDict() for row in df.collect()]
+        logger.info(f"Query returned {len(results)} rows.")
+        return results
+    except Exception as e:
+        logger.error(f"Error executing query: {e}")
+        raise SparkOperationError(f"Failed to execute query: {str(e)}")
