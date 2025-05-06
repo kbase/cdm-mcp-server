@@ -4,7 +4,7 @@ A FastAPI-based service that enables AI assistants to interact with Delta Lake t
 
 > **⚠️ Important Warning:** 
 > 
-> This service allows arbitrary `SELECT` queries to be executed against Delta Lake tables. Query results will be sent to the model host server, unless you are hosting your model locally.
+> This service allows arbitrary `read-oriented` queries to be executed against Delta Lake tables. Query results will be sent to the model host server, unless you are hosting your model locally.
 
 > **❌** Additionally, this service is **NOT** approved for deployment to any production environment, including CI, until explicit approval is granted by KBase leadership. Use strictly for local development or evaluation purposes only.
 
