@@ -109,7 +109,11 @@ def sample_delta_table(
         if where_clause:
             for keyword in FORBIDDEN_KEYWORDS:
                 if keyword in where_clause.lower():
-                    raise ValueError(f"Filter expression contains forbidden keyword: {keyword}")
+                    raise ValueError(
+                        f"Filter expression contains forbidden keyword: {keyword}"
+                    )
+            # TODO: build additional validation for query to ensure it is read only
+            
             df = df.filter(where_clause)
 
         df = df.limit(limit)
@@ -121,4 +125,44 @@ def sample_delta_table(
         logger.error(f"Error sampling rows from {full_table_name}: {e}")
         raise SparkOperationError(
             f"Failed to sample rows from {full_table_name}: {str(e)}"
+        )
+
+
+def query_delta_table(
+    spark: SparkSession, database: str, table: str, query: str
+) -> List[Dict[str, Any]]:
+    """
+    Executes a SQL query against a specific Delta table after basic validation.
+
+    Args:
+        spark: The SparkSession object.
+        database: The database (namespace) containing the table.
+        table: The name of the Delta table.
+        query: The SQL query string to execute.
+
+    Returns:
+        A list of dictionaries, where each dictionary represents a row.
+    """
+    _check_exists(database, table)
+    full_table_name = f"`{database}`.`{table}`"
+
+    for keyword in FORBIDDEN_KEYWORDS:
+        if keyword in query.lower():
+            raise ValueError(f"Query contains forbidden keyword: {keyword}")
+
+    # TODO: build additional validation for query to ensure it is read only
+
+    if database not in query or table not in query:
+        raise ValueError(f"Query must reference the target table [{full_table_name}]")
+
+    logger.info(f"Executing validated query on {full_table_name}: {query}")
+    try:
+        df = spark.sql(query)
+        results = [row.asDict() for row in df.collect()]
+        logger.info(f"Query returned {len(results)} rows.")
+        return results
+    except Exception as e:
+        logger.error(f"Error executing query on {full_table_name}: {e}")
+        raise SparkOperationError(
+            f"Failed to execute query on {full_table_name}: {str(e)}"
         )
