@@ -2,6 +2,11 @@
 
 A FastAPI-based service that enables AI assistants to interact with Delta Lake tables stored in MinIO through Spark, implementing the Model Context Protocol (MCP) for natural language data operations.
 
+> **⚠️ Important Warning:** 
+> 
+> This service allows arbitrary `read-oriented` queries to be executed against Delta Lake tables. Query results will be sent to the model host server, unless you are hosting your model locally.
+
+> **❌** Additionally, this service is **NOT** approved for deployment to any production environment, including CI, until explicit approval is granted by KBase leadership. Use strictly for local development or evaluation purposes only.
 
 ## Quick Start
 
@@ -70,7 +75,7 @@ As an example, to connect with Cursor:
 MCP-compatible clients can use natural language to interact with Delta tables. Here are some example prompts:
 
 ```markdown
-1. "List all Delta tables in my MinIO storage"
+1. "List all Delta tables in my lakehouse tenant"
 2. "Show me the schema of the products table"
 3. "Read the first 10 rows from the employees table"
 4. "Find products with price > 100"
