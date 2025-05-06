@@ -113,7 +113,7 @@ def sample_delta_table(
                         f"Filter expression contains forbidden keyword: {keyword}"
                     )
             # TODO: build additional validation for query to ensure it is read only
-            
+
             df = df.filter(where_clause)
 
         df = df.limit(limit)
@@ -128,23 +128,17 @@ def sample_delta_table(
         )
 
 
-def query_delta_table(
-    spark: SparkSession, database: str, table: str, query: str
-) -> List[Dict[str, Any]]:
+def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
     """
     Executes a SQL query against a specific Delta table after basic validation.
 
     Args:
         spark: The SparkSession object.
-        database: The database (namespace) containing the table.
-        table: The name of the Delta table.
         query: The SQL query string to execute.
 
     Returns:
         A list of dictionaries, where each dictionary represents a row.
     """
-    _check_exists(database, table)
-    full_table_name = f"`{database}`.`{table}`"
 
     for keyword in FORBIDDEN_KEYWORDS:
         if keyword in query.lower():
@@ -152,17 +146,12 @@ def query_delta_table(
 
     # TODO: build additional validation for query to ensure it is read only
 
-    if database not in query or table not in query:
-        raise ValueError(f"Query must reference the target table [{full_table_name}]")
-
-    logger.info(f"Executing validated query on {full_table_name}: {query}")
+    logger.info(f"Executing validated query: {query}")
     try:
         df = spark.sql(query)
         results = [row.asDict() for row in df.collect()]
         logger.info(f"Query returned {len(results)} rows.")
         return results
     except Exception as e:
-        logger.error(f"Error executing query on {full_table_name}: {e}")
-        raise SparkOperationError(
-            f"Failed to execute query on {full_table_name}: {str(e)}"
-        )
+        logger.error(f"Error executing query: {e}")
+        raise SparkOperationError(f"Failed to execute query: {str(e)}")
