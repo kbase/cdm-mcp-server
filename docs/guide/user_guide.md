@@ -217,7 +217,7 @@ The CDM MCP Server implements the Model Context Protocol (MCP), allowing AI assi
 
 > **⚠️ Reminder** 
 > 
-> Any data returned by AI generated query will be sent to the model host server—unless you’re running the model locally. Only create or import test datasets that are safe to share publicly when using this service.  
+> Any data returned by AI generated query will be sent to the AI model host server (e.g. ChatGPT, Anthropic, etc.)—unless you’re running the model locally. Only create or import test datasets that are safe to share publicly when using this service.  
 
 
 ### MCP Configuration
