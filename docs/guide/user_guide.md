@@ -314,7 +314,7 @@ Once configured, you can interact with your Delta tables using natural language.
 
 #### Tips for Effective Prompts
 - Be specific about the data you want to see
-- Mention the table name if you're working with multiple tables
+- Mention the table names if you're working with multiple tables
 - Specify any filters or conditions clearly
 - Use natural language to describe aggregations or calculations
 
