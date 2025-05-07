@@ -31,4 +31,4 @@ RUN chmod a+x /opt/scripts/*.sh
 # Switch back to non-root user
 USER spark_user
 
-CMD ["python", "-m", "src.main"]
+ENTRYPOINT ["/opt/scripts/mcp-server-entrypoint.sh"]
