@@ -9,9 +9,10 @@ import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security.utils import get_authorization_scheme_param
+from fastapi_mcp import FastApiMCP
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.routes import health
+from src.routes import delta, health
 from src.service import app_state
 from src.service.config import configure_logging, get_settings
 from src.service.exception_handlers import universal_error_handler
@@ -76,8 +77,18 @@ def create_application() -> FastAPI:
 
     # Include routers
     app.include_router(health.router)
+    app.include_router(delta.router)
 
-    #TODO: Add MCP Server Integration
+    # MCP Server Integration
+    logger.info("Setting up MCP server...")
+    mcp = FastApiMCP(
+        app,
+        name="DeltaLakeMCP",
+        description="MCP Server for interacting with Delta Lake tables via Spark",
+        include_tags=["Delta Lake"], # Only include endpoints tagged with "Delta Lake"
+    )
+    mcp.mount()
+    logger.info("MCP server mounted")
 
     # Add startup and shutdown event handlers
     async def startup_event():
