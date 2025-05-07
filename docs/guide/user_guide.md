@@ -287,7 +287,7 @@ Once configured, you can interact with your Delta tables using natural language.
 
 > **⚠️ Final Warning Before We Phone Home!**  
 > 
-> Any output from an AI generated query will be sent to the remote model host—unless you’ve configured your MCP Host to use locally deployed model.
+> Any output from an AI generated query will be sent to the remote AI model host—unless you’ve configured your MCP Host to use a locally deployed model.
 
 #### Database Exploration
 ```markdown
