@@ -239,7 +239,7 @@ The CDM MCP Server implements the Model Context Protocol (MCP), allowing AI assi
 
 2. Replace `YOUR_KBASE_TOKEN` with your actual KBase authentication token.
 
-3. Optionally, run `chmod 600` on the `mcp.json` file if your MCP Host encounters reading issues.
+3. Ensure to run `chmod 600` on the `mcp.json` file to prevent it from being read by unauthorized parties/tools.
 
 ### MCP Host Setup
 Most MCP‑enabled tools offer two ways to configure a host:
