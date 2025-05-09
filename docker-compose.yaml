@@ -125,7 +125,7 @@ services:
       - NETWORK_NAME=cdm-jupyterhub-network
       - JUPYTERHUB_USER_IMAGE=ghcr.io/kbase/cdm-jupyterhub:pr-177
       # Ensure that the JUPYTERHUB_MOUNT_BASE_DIR directory below is an absolute path and exists on your local machine.
-      - JUPYTERHUB_MOUNT_BASE_DIR=/Users/tgu/Development/kb_apps/cdm-mcp-server/cdr/cdm/jupyter
+      - JUPYTERHUB_MOUNT_BASE_DIR=/cdr/cdm/jupyter
       - ENVIRONMENT=dev
       - KB_ENV=ci
       - AUTH_FULL_ADMIN_ROLES=CDM_JUPYTERHUB_ADMIN
