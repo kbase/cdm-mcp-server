@@ -68,6 +68,7 @@ def _check_query_is_valid(query: str) -> bool:
     """
 
     try:
+        # NOTE: sqlparse does not validate SQL syntax; what happens with unexpected syntax is unknown
         statements = sqlparse.parse(query)
     except Exception as e:
         raise SparkQueryError(f"Query {query} is not a valid SQL query: {e}")
