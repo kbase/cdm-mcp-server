@@ -61,7 +61,7 @@ def _check_query_is_valid(query: str) -> bool:
 
     statements = sqlparse.parse(query)
     if len(statements) != 1:
-        raise SparkQueryError("Query {query} must contain exactly one statement")
+        raise SparkQueryError(f"Query {query} must contain exactly one statement")
 
     statement = statements[0]
     if statement.get_type().lower() not in ALLOWED_STATEMENTS:
