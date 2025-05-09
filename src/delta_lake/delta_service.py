@@ -76,6 +76,7 @@ def _check_query_is_valid(query: str) -> bool:
         raise SparkQueryError(f"Query {query} must contain exactly one statement")
 
     statement = statements[0]
+    # NOTE: statement might have subqueries, we only check the main statement here!
     if statement.get_type().lower() not in ALLOWED_STATEMENTS:
         raise SparkQueryError(
             f"Query {query} must be one of the following: {', '.join(ALLOWED_STATEMENTS)}, got {statement.get_type()}"
