@@ -24,6 +24,7 @@ from src.service.exceptions import (
     MissingTokenError,
     S3AccessError,
     SparkOperationError,
+    SparkQueryError,
     SparkSessionError,
 )
 
@@ -63,6 +64,7 @@ _ERR_MAP = {
     DeltaLakeError: ErrorMapping(ErrorType.DELTA_LAKE_ERROR, _H400),
     SparkSessionError: ErrorMapping(ErrorType.SPARK_SESSION_ERROR, _H503),
     SparkOperationError: ErrorMapping(ErrorType.SPARK_OPERATION_ERROR, _H503),
+    SparkQueryError: ErrorMapping(ErrorType.SPARK_QUERY_ERROR, _H400),
     # Base error fallback
     MCPServerError: ErrorMapping(None, status.HTTP_500_INTERNAL_SERVER_ERROR),
 }

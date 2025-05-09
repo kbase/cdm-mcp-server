@@ -57,6 +57,9 @@ class ErrorType(Enum):
     SPARK_OPERATION_ERROR = (20080, "Spark operation error")
     """ There was an error executing a Spark operation. """
 
+    SPARK_QUERY_ERROR = (20090, "Spark query error")
+    """ There was an error executing a Spark query. """
+
     REQUEST_VALIDATION_FAILED = (30010, "Request validation failed")
     """ A request to a service failed validation of the request. """
 

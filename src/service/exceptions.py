@@ -21,6 +21,12 @@ class SparkOperationError(SparkSessionError):
     """
 
 
+class SparkQueryError(SparkOperationError):
+    """
+    An error thrown when a Spark query fails.
+    """
+
+
 class AuthenticationError(MCPServerError):
     """
     Super class for authentication related errors.
