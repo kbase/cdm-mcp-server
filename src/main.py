@@ -112,4 +112,10 @@ if __name__ == "__main__":
     app_instance = create_application()
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
+
+    if os.getenv("POSTGRES_USER") != "readonly_user":
+        raise ValueError("POSTGRES_USER must be set to readonly_user")
+    if os.getenv("MINIO_ACCESS_KEY") != "minio-readonly":
+        raise ValueError("MINIO_ACCESS_KEY must be set to minio-readonly")
+
     uvicorn.run(app_instance, host=host, port=port)

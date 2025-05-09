@@ -22,6 +22,8 @@ MAX_SAMPLE_ROWS = 1000
 
 # Common SQL keywords that might indicate destructive operations
 FORBIDDEN_KEYWORDS = {
+    # NOTE: This might create false positives, legitemate queries might include these keywords 
+    # e.g. "SELECT * FROM orders ORDER BY created_at DESC"
     "drop",
     "truncate",
     "delete",
@@ -48,6 +50,8 @@ ALLOWED_STATEMENTS = {
 }
 
 FORBIDDEN_POSTGRESQL_SCHEMAS = {
+    # NOTE: This might create false positives, legitemate queries might include these schemas
+    # e.g. "SELECT * FROM jpg_files"
     "pg_",
     "pg_catalog",
     "information_schema",
@@ -57,9 +61,17 @@ FORBIDDEN_POSTGRESQL_SCHEMAS = {
 def _check_query_is_valid(query: str) -> bool:
     """
     Check if a query is valid.
+
+    Please note that this function is not a comprehensive SQL query validator.
+    It only checks for basic syntax and structure.
+    MCP server should be configured to use read-only user for both PostgreSQL and MinIO.
     """
 
-    statements = sqlparse.parse(query)
+    try:
+        statements = sqlparse.parse(query)
+    except Exception as e:
+        raise SparkQueryError(f"Query {query} is not a valid SQL query: {e}")
+
     if len(statements) != 1:
         raise SparkQueryError(f"Query {query} must contain exactly one statement")
 
