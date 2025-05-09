@@ -52,6 +52,7 @@ ALLOWED_STATEMENTS = {
 FORBIDDEN_POSTGRESQL_SCHEMAS = {
     # NOTE: This might create false positives, legitemate queries might include these schemas
     # e.g. "SELECT * FROM jpg_files"
+    # NOTE: may also need to expand this if other databases are used
     "pg_",
     "pg_catalog",
     "information_schema",
