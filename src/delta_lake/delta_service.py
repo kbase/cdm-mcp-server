@@ -5,6 +5,7 @@ Service layer for interacting with Delta Lake tables via Spark.
 import logging
 from typing import Any, Dict, List
 
+import sqlparse
 from pyspark.sql import SparkSession
 
 from src.delta_lake.data_store import database_exists, table_exists
@@ -12,6 +13,7 @@ from src.service.exceptions import (
     DeltaDatabaseNotFoundError,
     DeltaTableNotFoundError,
     SparkOperationError,
+    SparkQueryError,
 )
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,8 @@ MAX_SAMPLE_ROWS = 1000
 
 # Common SQL keywords that might indicate destructive operations
 FORBIDDEN_KEYWORDS = {
+    # NOTE: This might create false positives, legitemate queries might include these keywords 
+    # e.g. "SELECT * FROM orders ORDER BY created_at DESC"
     "drop",
     "truncate",
     "delete",
@@ -32,6 +36,70 @@ FORBIDDEN_KEYWORDS = {
     "rename",
     "vacuum",
 }
+
+DISALLOW_SQL_META_CHARS = {
+    "--",
+    "/*",
+    "*/",
+    ";",
+    "\\",
+}
+
+ALLOWED_STATEMENTS = {
+    "select",
+}
+
+FORBIDDEN_POSTGRESQL_SCHEMAS = {
+    # NOTE: This might create false positives, legitemate queries might include these schemas
+    # e.g. "SELECT * FROM jpg_files"
+    # NOTE: may also need to expand this if other databases are used
+    "pg_",
+    "pg_catalog",
+    "information_schema",
+}
+
+
+def _check_query_is_valid(query: str) -> bool:
+    """
+    Check if a query is valid.
+
+    Please note that this function is not a comprehensive SQL query validator.
+    It only checks for basic syntax and structure.
+    MCP server should be configured to use read-only user for both PostgreSQL and MinIO.
+    """
+
+    try:
+        # NOTE: sqlparse does not validate SQL syntax; what happens with unexpected syntax is unknown
+        statements = sqlparse.parse(query)
+    except Exception as e:
+        raise SparkQueryError(f"Query {query} is not a valid SQL query: {e}")
+
+    if len(statements) != 1:
+        raise SparkQueryError(f"Query {query} must contain exactly one statement")
+
+    statement = statements[0]
+    # NOTE: statement might have subqueries, we only check the main statement here!
+    if statement.get_type().lower() not in ALLOWED_STATEMENTS:
+        raise SparkQueryError(
+            f"Query {query} must be one of the following: {', '.join(ALLOWED_STATEMENTS)}, got {statement.get_type()}"
+        )
+
+    if any(schema in query.lower() for schema in FORBIDDEN_POSTGRESQL_SCHEMAS):
+        raise SparkQueryError(
+            f"Query {query} contains forbidden PostgreSQL schema: {', '.join(FORBIDDEN_POSTGRESQL_SCHEMAS)}"
+        )
+
+    if any(char in query for char in DISALLOW_SQL_META_CHARS):
+        raise SparkQueryError(
+            f"Query {query} contains disallowed metacharacter: {', '.join(char for char in DISALLOW_SQL_META_CHARS if char in query)}"
+        )
+
+    if any(keyword in query.lower() for keyword in FORBIDDEN_KEYWORDS):
+        raise SparkQueryError(
+            f"Query {query} contains forbidden keyword: {', '.join(keyword for keyword in FORBIDDEN_KEYWORDS if keyword in query.lower())}"
+        )
+
+    return True
 
 
 def _check_exists(database: str, table: str) -> bool:
@@ -107,13 +175,8 @@ def sample_delta_table(
         if columns:
             df = df.select(columns)
         if where_clause:
-            for keyword in FORBIDDEN_KEYWORDS:
-                if keyword in where_clause.lower():
-                    raise ValueError(
-                        f"Filter expression contains forbidden keyword: {keyword}"
-                    )
-            # TODO: build additional validation for query to ensure it is read only
-
+            equivalent_query = f"SELECT * FROM {full_table_name} WHERE {where_clause}"
+            _check_query_is_valid(equivalent_query)
             df = df.filter(where_clause)
 
         df = df.limit(limit)
@@ -140,11 +203,7 @@ def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
         A list of dictionaries, where each dictionary represents a row.
     """
 
-    for keyword in FORBIDDEN_KEYWORDS:
-        if keyword in query.lower():
-            raise ValueError(f"Query contains forbidden keyword: {keyword}")
-
-    # TODO: build additional validation for query to ensure it is read only
+    _check_query_is_valid(query)
 
     logger.info(f"Executing validated query: {query}")
     try:

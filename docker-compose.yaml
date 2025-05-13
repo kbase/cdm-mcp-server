@@ -149,8 +149,11 @@ services:
       - POSTGRES_USER=hive
       - POSTGRES_PASSWORD=hivepassword
       - POSTGRES_DB=hive
+      - READONLY_USER=readonly_user
+      - READONLY_PASSWORD=readonly_password
     volumes:
       - ./cdr/cdm/jupyter/cdm-postgres/data:/var/lib/postgresql/data
+      - ./scripts/init-postgres-readonly.sh:/docker-entrypoint-initdb.d/init-postgres-readonly.sh
     networks:
       - cdm-jupyterhub-network
   
@@ -169,8 +172,8 @@ services:
       - KBASE_AUTH_URL=https://ci.kbase.us/services/auth/
       - KBASE_ADMIN_ROLES=CDM_JUPYTERHUB_ADMIN
       - SPARK_DRIVER_HOST=cdm-mcp-server
-      - POSTGRES_USER=hive
-      - POSTGRES_PASSWORD=hivepassword
+      - POSTGRES_USER=readonly_user
+      - POSTGRES_PASSWORD=readonly_password
       - POSTGRES_DB=hive
       - POSTGRES_URL=postgres:5432
       - SPARK_POOL=highPriority
