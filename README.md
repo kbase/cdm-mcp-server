@@ -33,22 +33,17 @@ For detailed documentation, please refer to the [User Guide](docs/guide/user_gui
    mkdir -p cdr/cdm/jupyter/cdm_shared_workspace
    ```
 
-3. Make scripts executable:
-   ```bash
-   chmod +x scripts/*.sh
-   ```
-
-4. Create Docker network:
+3. Create Docker network:
    ```bash
    docker network create cdm-jupyterhub-network
    ```
 
-5. Start the services:
+4. Start the services:
    ```bash
    docker-compose up -d --build
    ```
 
-6. Access the services:
+5. Access the services:
    - MCP Server: http://localhost:8000/docs
    - MinIO Console: http://localhost:9003
    - Spark Master UI: http://localhost:8090
