@@ -197,6 +197,9 @@ services:
       - POSTGRES_URL=postgres:5432
       - SPARK_POOL=highPriority
       - EXECUTOR_CORES=10
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DELTALAKE_WAREHOUSE_DIR=s3a://cdm-lake/warehouse
     volumes:
       - ./cdr/cdm/jupyter/cdm_shared_workspace:/cdm_shared_workspace
     networks:
