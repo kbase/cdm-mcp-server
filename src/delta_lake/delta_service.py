@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 MAX_SAMPLE_ROWS = 1000
 CACHE_EXPIRY_SECONDS = 3600  # Cache results for 1 hour by default
+NAMESPACE_PREFIX = "cdm-mcp"
 
 # Common SQL keywords that might indicate destructive operations
 FORBIDDEN_KEYWORDS = {
@@ -118,45 +119,52 @@ def _check_exists(database: str, table: str) -> bool:
     return True
 
 
-def _generate_cache_key(prefix: str, params: Dict[str, Any]) -> str:
+def _generate_cache_key(params: Dict[str, Any]) -> str:
     """
-    Generate a cache key from a prefix and parameters.
+    Generate a cache key from parameters.
     """
     # Convert parameters to a sorted JSON string to ensure consistency
     param_str = json.dumps(params, sort_keys=True)
     # Create a hash of the parameters to avoid very long keys
     param_hash = hashlib.md5(param_str.encode()).hexdigest()
-    return f"{prefix}:{param_hash}"
+    return param_hash
 
 
 def _get_from_cache(
-    spark: SparkSession, cache_key: str
+    spark: SparkSession, namespace: str, cache_key: str
 ) -> Optional[List[Dict[str, Any]]]:
     """
     Try to get data from Redis cache.
     """
     try:
+        table_name = f"{NAMESPACE_PREFIX}-{namespace}"
+
         cache_df = (
             spark.read.format("org.apache.spark.sql.redis")
-            .option("table", cache_key)
-            .option("key.column", "id")
+            .option("table", table_name)
+            .option("key.column", "cache_key")
             .load()
         )
 
         if not cache_df.rdd.isEmpty():
-            first_row = cache_df.first()
-            if first_row and "value" in first_row:
-                return json.loads(first_row["value"])
+            filtered_df = cache_df.filter(f"cache_key = '{cache_key}'")
+            if not filtered_df.rdd.isEmpty():
+                first_row = filtered_df.first()
+                if first_row and "value" in first_row:
+                    return json.loads(first_row["value"])
 
     except Exception as e:
         # Log Redis connection errors but don't fail the operation
-        logger.exception(f"Redis connection error for key {cache_key}")
+        logger.exception(
+            f"Redis connection error for key {cache_key} in namespace {namespace}"
+        )
 
     return None
 
 
 def _store_in_cache(
     spark: SparkSession,
+    namespace: str,
     cache_key: str,
     data: List[Dict[str, Any]],
     ttl: int = CACHE_EXPIRY_SECONDS,
@@ -165,25 +173,31 @@ def _store_in_cache(
     Store data in Redis cache.
     """
     try:
+        table_name = f"{NAMESPACE_PREFIX}-{namespace}"
+
         json_data = json.dumps(data)
 
-        cache_data = [(1, json_data)]
-        cache_df = spark.createDataFrame(cache_data, ["id", "value"])
+        cache_data = [(cache_key, json_data)]
+        cache_df = spark.createDataFrame(cache_data, ["cache_key", "value"])
 
         # Write to Redis
         (
             cache_df.write.format("org.apache.spark.sql.redis")
-            .option("table", cache_key)
-            .option("key.column", "id")
+            .option("table", table_name)
+            .option("key.column", "cache_key")
             .option("ttl", ttl)
-            .mode("overwrite")
+            .mode("append")
             .save()
         )
 
-        logger.debug(f"Cached data under key {cache_key} with TTL {ttl}s")
+        logger.debug(
+            f"Cached data under key {cache_key} in table {table_name} with TTL {ttl}s"
+        )
     except Exception as e:
         # Log the error but don't fail the operation if caching fails
-        logger.exception(f"Failed to cache data under key {cache_key}")
+        logger.exception(
+            f"Failed to cache data under key {cache_key} in namespace {namespace}"
+        )
 
 
 def count_delta_table(spark: SparkSession, database: str, table: str) -> int:
