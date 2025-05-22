@@ -200,7 +200,9 @@ def _store_in_cache(
         )
 
 
-def count_delta_table(spark: SparkSession, database: str, table: str) -> int:
+def count_delta_table(
+    spark: SparkSession, database: str, table: str, use_cache: bool = True
+) -> int:
     """
     Counts the number of rows in a specific Delta table.
 
@@ -212,12 +214,27 @@ def count_delta_table(spark: SparkSession, database: str, table: str) -> int:
     Returns:
         The number of rows in the table.
     """
+
+    namespace = "count"
+    params = {"database": database, "table": table}
+    cache_key = _generate_cache_key(params)
+
+    if use_cache:
+        cached_result = _get_from_cache(spark, namespace, cache_key)
+        if cached_result:
+            logger.info(f"Cache hit for count on {database}.{table}")
+            return cached_result[0]["count"]
+
     _check_exists(database, table)
     full_table_name = f"`{database}`.`{table}`"
     logger.info(f"Counting rows in {full_table_name}")
     try:
         count = spark.table(full_table_name).count()
         logger.info(f"{full_table_name} has {count} rows.")
+
+        if use_cache:
+            _store_in_cache(spark, namespace, cache_key, [{"count": count}])
+
         return count
     except Exception as e:
         logger.error(f"Error counting rows in {full_table_name}: {e}")
@@ -233,6 +250,7 @@ def sample_delta_table(
     limit: int = 10,
     columns: List[str] | None = None,
     where_clause: str | None = None,
+    use_cache: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Retrieves a sample of rows from a specific Delta table.
@@ -248,6 +266,21 @@ def sample_delta_table(
     Returns:
         A list of dictionaries, where each dictionary represents a row.
     """
+    namespace = "sample"
+    params = {
+        "database": database,
+        "table": table,
+        "limit": limit,
+        "columns": columns,
+        "where_clause": where_clause,
+    }
+    cache_key = _generate_cache_key(params)
+
+    if use_cache:
+        cached_result = _get_from_cache(spark, namespace, cache_key)
+        if cached_result:
+            logger.info(f"Cache hit for sample on {database}.{table}")
+            return cached_result
 
     if not 0 < limit <= MAX_SAMPLE_ROWS:
         raise ValueError(f"Limit must be between 1 and {MAX_SAMPLE_ROWS}, got {limit}")
@@ -268,6 +301,10 @@ def sample_delta_table(
 
         results = [row.asDict() for row in df.collect()]
         logger.info(f"Sampled {len(results)} rows.")
+
+        if use_cache:
+            _store_in_cache(spark, namespace, cache_key, results)
+
         return results
     except Exception as e:
         logger.error(f"Error sampling rows from {full_table_name}: {e}")
@@ -276,7 +313,9 @@ def sample_delta_table(
         )
 
 
-def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
+def query_delta_table(
+    spark: SparkSession, query: str, use_cache: bool = True
+) -> List[Dict[str, Any]]:
     """
     Executes a SQL query against a specific Delta table after basic validation.
 
@@ -287,6 +326,17 @@ def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
     Returns:
         A list of dictionaries, where each dictionary represents a row.
     """
+    namespace = "query"
+    params = {"query": query}
+    cache_key = _generate_cache_key(params)
+
+    if use_cache:
+        cached_result = _get_from_cache(spark, namespace, cache_key)
+        if cached_result:
+            logger.info(
+                f"Cache hit for query: {query[:50]}{'...' if len(query) > 50 else ''}"
+            )
+            return cached_result
 
     _check_query_is_valid(query)
 
@@ -295,6 +345,10 @@ def query_delta_table(spark: SparkSession, query: str) -> List[Dict[str, Any]]:
         df = spark.sql(query)
         results = [row.asDict() for row in df.collect()]
         logger.info(f"Query returned {len(results)} rows.")
+
+        if use_cache:
+            _store_in_cache(spark, namespace, cache_key, results)
+
         return results
     except Exception as e:
         logger.error(f"Error executing query: {e}")
