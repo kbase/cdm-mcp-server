@@ -6,7 +6,6 @@ USER root
 RUN apt-get update && apt-get install -y \
     # required for psycopg
     libpq-dev gcc \
-    tini \
     && rm -rf /var/lib/apt/lists/*
 
 ENV SPARK_JARS_DIR=/opt/bitnami/spark/jars
@@ -15,9 +14,6 @@ ENV CONFIG_DIR=/opt/config
 COPY ./config/ ${CONFIG_DIR}
 ENV SPARK_FAIR_SCHEDULER_CONFIG=${CONFIG_DIR}/spark-fairscheduler.xml
 
-# Install uv and Python dependencies
-RUN pip3 install --upgrade pip && \
-    pip3 install uv
 COPY pyproject.toml uv.lock .python-version ./
 ENV UV_PROJECT_ENVIRONMENT=/opt/bitnami/python
 RUN uv sync --locked --inexact --no-dev
