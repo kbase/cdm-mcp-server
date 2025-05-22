@@ -1,4 +1,4 @@
-FROM ghcr.io/kbase/cdm-spark-standalone:pr-33
+FROM ghcr.io/kbase/cdm-spark-standalone:pr-34
 
 # Switch to root to install packages
 USER root
@@ -15,11 +15,12 @@ ENV CONFIG_DIR=/opt/config
 COPY ./config/ ${CONFIG_DIR}
 ENV SPARK_FAIR_SCHEDULER_CONFIG=${CONFIG_DIR}/spark-fairscheduler.xml
 
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install uv and Python dependencies
+RUN pip3 install --upgrade pip && \
+    pip3 install uv
+COPY pyproject.toml uv.lock .python-version ./
+ENV UV_PROJECT_ENVIRONMENT=/opt/bitnami/python
+RUN uv sync --locked --inexact --no-dev
 
 WORKDIR /app
 
