@@ -150,7 +150,7 @@ def _get_from_cache(
 
     except Exception as e:
         # Log the error but don't fail the operation if caching fails
-        logger.debug(f"Cache miss or error for key {cache_key}: {e}")
+        logger.warning(f"Redis connection error for key {cache_key}: {e}")
 
     return None
 
