@@ -143,7 +143,7 @@ def _get_from_cache(
             .load()
         )
 
-        if cache_df.count() > 0:
+        if not cache_df.rdd.isEmpty():
             first_row = cache_df.first()
             if first_row and "value" in first_row:
                 return json.loads(first_row["value"])
