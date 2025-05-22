@@ -273,7 +273,7 @@ def sample_delta_table(
         "database": database,
         "table": table,
         "limit": limit,
-        "columns": columns,
+        "columns": sorted(columns) if columns else None,
         "where_clause": where_clause,
     }
     cache_key = _generate_cache_key(params)
