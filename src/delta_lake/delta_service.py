@@ -2,8 +2,10 @@
 Service layer for interacting with Delta Lake tables via Spark.
 """
 
+import hashlib
+import json
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import sqlparse
 from pyspark.sql import SparkSession
@@ -19,10 +21,11 @@ from src.service.exceptions import (
 logger = logging.getLogger(__name__)
 
 MAX_SAMPLE_ROWS = 1000
+CACHE_EXPIRY_SECONDS = 3600  # Cache results for 1 hour by default
 
 # Common SQL keywords that might indicate destructive operations
 FORBIDDEN_KEYWORDS = {
-    # NOTE: This might create false positives, legitemate queries might include these keywords 
+    # NOTE: This might create false positives, legitemate queries might include these keywords
     # e.g. "SELECT * FROM orders ORDER BY created_at DESC"
     "drop",
     "truncate",
@@ -113,6 +116,74 @@ def _check_exists(database: str, table: str) -> bool:
             f"Table [{table}] not found in database [{database}]"
         )
     return True
+
+
+def _generate_cache_key(prefix: str, params: Dict[str, Any]) -> str:
+    """
+    Generate a cache key from a prefix and parameters.
+    """
+    # Convert parameters to a sorted JSON string to ensure consistency
+    param_str = json.dumps(params, sort_keys=True)
+    # Create a hash of the parameters to avoid very long keys
+    param_hash = hashlib.md5(param_str.encode()).hexdigest()
+    return f"{prefix}:{param_hash}"
+
+
+def _get_from_cache(
+    spark: SparkSession, cache_key: str
+) -> Optional[List[Dict[str, Any]]]:
+    """
+    Try to get data from Redis cache.
+    """
+    try:
+        cache_df = (
+            spark.read.format("org.apache.spark.sql.redis")
+            .option("table", cache_key)
+            .option("key.column", "id")
+            .load()
+        )
+
+        if cache_df.count() > 0:
+            first_row = cache_df.first()
+            if first_row and "value" in first_row:
+                return json.loads(first_row["value"])
+
+    except Exception as e:
+        # Log the error but don't fail the operation if caching fails
+        logger.debug(f"Cache miss or error for key {cache_key}: {e}")
+
+    return None
+
+
+def _store_in_cache(
+    spark: SparkSession,
+    cache_key: str,
+    data: List[Dict[str, Any]],
+    ttl: int = CACHE_EXPIRY_SECONDS,
+) -> None:
+    """
+    Store data in Redis cache.
+    """
+    try:
+        json_data = json.dumps(data)
+
+        cache_data = [(1, json_data)]
+        cache_df = spark.createDataFrame(cache_data, ["id", "value"])
+
+        # Write to Redis
+        (
+            cache_df.write.format("org.apache.spark.sql.redis")
+            .option("table", cache_key)
+            .option("key.column", "id")
+            .option("ttl", ttl)
+            .mode("overwrite")
+            .save()
+        )
+
+        logger.debug(f"Cached data under key {cache_key} with TTL {ttl}s")
+    except Exception as e:
+        # Log the error but don't fail the operation if caching fails
+        logger.warning(f"Failed to cache data under key {cache_key}: {e}")
 
 
 def count_delta_table(spark: SparkSession, database: str, table: str) -> int:

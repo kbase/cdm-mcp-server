@@ -1,4 +1,4 @@
-FROM ghcr.io/kbase/cdm-spark-standalone:pr-32
+FROM ghcr.io/kbase/cdm-spark-standalone:pr-33
 
 # Switch to root to install packages
 USER root
@@ -6,6 +6,7 @@ USER root
 RUN apt-get update && apt-get install -y \
     # required for psycopg
     libpq-dev gcc \
+    tini \
     && rm -rf /var/lib/apt/lists/*
 
 ENV SPARK_JARS_DIR=/opt/bitnami/spark/jars
@@ -31,4 +32,4 @@ RUN chmod a+x /opt/scripts/*.sh
 # Switch back to non-root user
 USER spark_user
 
-ENTRYPOINT ["/opt/scripts/mcp-server-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/opt/scripts/mcp-server-entrypoint.sh"]
