@@ -149,8 +149,8 @@ def _get_from_cache(
                 return json.loads(first_row["value"])
 
     except Exception as e:
-        # Log the error but don't fail the operation if caching fails
-        logger.warning(f"Redis connection error for key {cache_key}: {e}")
+        # Log Redis connection errors but don't fail the operation
+        logger.exception(f"Redis connection error for key {cache_key}")
 
     return None
 
@@ -183,7 +183,7 @@ def _store_in_cache(
         logger.debug(f"Cached data under key {cache_key} with TTL {ttl}s")
     except Exception as e:
         # Log the error but don't fail the operation if caching fails
-        logger.warning(f"Failed to cache data under key {cache_key}: {e}")
+        logger.exception(f"Failed to cache data under key {cache_key}")
 
 
 def count_delta_table(spark: SparkSession, database: str, table: str) -> int:
