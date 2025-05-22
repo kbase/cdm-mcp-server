@@ -6,4 +6,4 @@
 
 # skip launching Spark - we use this container as spark driver
 
-exec python -m src.main
+python -m src.main
