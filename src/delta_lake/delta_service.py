@@ -210,6 +210,7 @@ def count_delta_table(
         spark: The SparkSession object.
         database: The database (namespace) containing the table.
         table: The name of the Delta table.
+        use_cache: Whether to use the redis cache to store the result.
 
     Returns:
         The number of rows in the table.
@@ -262,6 +263,7 @@ def sample_delta_table(
         limit: The maximum number of rows to return.
         columns: The columns to return. If None, all columns will be returned.
         where_clause: A SQL WHERE clause to filter the rows. e.g. "id > 100"
+        use_cache: Whether to use the redis cache to store the result.
 
     Returns:
         A list of dictionaries, where each dictionary represents a row.
@@ -322,6 +324,7 @@ def query_delta_table(
     Args:
         spark: The SparkSession object.
         query: The SQL query string to execute.
+        use_cache: Whether to use the redis cache to store the result.
 
     Returns:
         A list of dictionaries, where each dictionary represents a row.
