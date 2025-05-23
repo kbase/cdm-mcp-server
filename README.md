@@ -52,9 +52,12 @@ For detailed documentation, please refer to the [User Guide](docs/guide/user_gui
 ### Testing
 
 ```bash
+# Install dependencies (only required on first run or when the uv.lock file changes)
+uv sync
+
 # Run tests
-pytest
+PYTHONPATH=. uv run pytest tests
 
 # Run with coverage
-pytest --cov=src tests/
+PYTHONPATH=. uv run pytest --cov=src tests/
 ```

@@ -110,7 +110,6 @@ services:
   cdm_jupyterhub:
     image: ghcr.io/kbase/cdm-jupyterhub:pr-177
     platform: linux/amd64
-    container_name: cdm_jupyterhub
     ports:
       - "4043:4043"
     depends_on:
@@ -151,7 +150,6 @@ services:
 
   postgres:
     image: postgres:16.3
-    container_name: postgres
     ports:
       - "5432:5432"
     environment:
@@ -200,8 +198,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DELTALAKE_WAREHOUSE_DIR=s3a://cdm-lake/warehouse
-    volumes:
-      - ./cdr/cdm/jupyter/cdm_shared_workspace:/cdm_shared_workspace
     networks:
       - cdm-jupyterhub-network
 
