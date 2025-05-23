@@ -149,6 +149,7 @@ dependencies = [
     { name = "delta-spark" },
     { name = "fastapi" },
     { name = "fastapi-mcp" },
+    { name = "mcp" },
     { name = "minio" },
     { name = "psycopg" },
     { name = "pyspark" },
@@ -170,6 +171,7 @@ requires-dist = [
     { name = "delta-spark", specifier = "==3.2.0" },
     { name = "fastapi", specifier = "==0.115.12" },
     { name = "fastapi-mcp", specifier = "==0.3.3" },
+    { name = "mcp", specifier = "==1.7.0" },
     { name = "minio", specifier = "==7.2.15" },
     { name = "psycopg", specifier = "==3.2.7" },
     { name = "pyspark", specifier = "==3.5.5" },
@@ -519,7 +521,7 @@ wheels = [
 
 [[package]]
 name = "mcp"
-version = "1.9.0"
+version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -532,9 +534,9 @@ dependencies = [
     { name = "starlette" },
     { name = "uvicorn", marker = "sys_platform != 'emscripten'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/8d/0f4468582e9e97b0a24604b585c651dfd2144300ecffd1c06a680f5c8861/mcp-1.9.0.tar.gz", hash = "sha256:905d8d208baf7e3e71d70c82803b89112e321581bcd2530f9de0fe4103d28749", size = 281432, upload-time = "2025-05-15T18:51:06.615Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/b7/0bf3c75ddedbc744f872c34801b9c6c8930fe1134212c45e25029f0b83df/mcp-1.7.0.tar.gz", hash = "sha256:8b955eddf5fbb09613c4d517956745d932db9f757673200112b336bd8092509f", size = 229504, upload-time = "2025-05-01T19:18:07.612Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/d5/22e36c95c83c80eb47c83f231095419cf57cf5cca5416f1c960032074c78/mcp-1.9.0-py3-none-any.whl", hash = "sha256:9dfb89c8c56f742da10a5910a1f64b0d2ac2c3ed2bd572ddb1cfab7f35957178", size = 125082, upload-time = "2025-05-15T18:51:04.916Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/09/943fa9dc1e9751c2e7302205112801d0bb6a12050e21f0945486748f9ff3/mcp-1.7.0-py3-none-any.whl", hash = "sha256:0e874a587f542211f36f87b02c9acd6ad2534976fb2c36ff794d8b2bc0a91915", size = 100192, upload-time = "2025-05-01T19:18:05.807Z" },
 ]
 
 [[package]]
