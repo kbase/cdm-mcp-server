@@ -53,7 +53,7 @@ For detailed documentation, please refer to the [User Guide](docs/guide/user_gui
 
 ```bash
 # Install dependencies (only required on first run or when the uv.lock file changes)
-uv sync --group dev
+uv sync
 
 # Run tests
 PYTHONPATH=. uv run pytest tests
