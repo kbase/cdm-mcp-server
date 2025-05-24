@@ -95,6 +95,7 @@ def get_spark_session(
     delta_lake: bool = True,
     executor_cores: int = DEFAULT_EXECUTOR_CORES,
     scheduler_pool: str = SPARK_DEFAULT_POOL,
+    spark_master_url: str | None = None,
 ) -> SparkSession:
     """
     Helper to get and manage the SparkSession and keep all of our spark configuration params in one place.
@@ -151,6 +152,8 @@ def get_spark_session(
         # Since the Spark driver cannot resolve a pod's hostname without a dedicated service for each user pod,
         # use the pod IP as the identifier for the Spark driver host
         config["spark.driver.host"] = socket.gethostbyname(hostname)
+        # In containerized environments, bind to all interfaces to allow connections
+        config["spark.driver.bindAddress"] = "0.0.0.0"
     else:
         # General driver host configuration - hostname is resolvable
         config["spark.driver.host"] = hostname
@@ -171,7 +174,10 @@ def get_spark_session(
         config.update(yarn_config)
     else:
         _validate_env_vars(["SPARK_MASTER_URL"], "Standalone Spark setup")
-        config["spark.master"] = os.environ["SPARK_MASTER_URL"]
+        if spark_master_url:
+            config["spark.master"] = spark_master_url
+        else:
+            config["spark.master"] = os.environ["SPARK_MASTER_URL"]
 
     # S3 configuration
     if yarn or delta_lake:
