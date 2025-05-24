@@ -157,6 +157,18 @@ def get_spark_session(
     else:
         # General driver host configuration - hostname is resolvable
         config["spark.driver.host"] = hostname
+        # Bind to all interfaces for containerized environments
+        config["spark.driver.bindAddress"] = "0.0.0.0"
+
+    # Add timeout and connectivity configurations to prevent hanging
+    config.update({
+        "spark.network.timeout": "300s",
+        "spark.executor.heartbeatInterval": "10s",
+        "spark.dynamicAllocation.executorIdleTimeout": "60s",
+        "spark.dynamicAllocation.cachedExecutorIdleTimeout": "120s",
+        "spark.sql.adaptive.enabled": "true",
+        "spark.sql.adaptive.coalescePartitions.enabled": "true",
+    })
 
     # YARN configuration
     if yarn:
@@ -203,9 +215,22 @@ def get_spark_session(
     # Create SparkConf from accumulated configuration
     spark_conf = SparkConf().setAll(list(config.items()))
 
-    # Initialize SparkSession
-    spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
+    # Initialize SparkSession with better error handling
+    try:
+        print(f"Attempting to create SparkSession with driver host: {config.get('spark.driver.host')}")
+        print(f"Driver bind address: {config.get('spark.driver.bindAddress')}")
+        print(f"Spark master: {config.get('spark.master')}")
+        
+        spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
+        spark.sparkContext.setLogLevel("ERROR")
+        
+        print(f"SparkSession created successfully. Application ID: {spark.sparkContext.applicationId}")
+        print(f"Spark UI: {spark.sparkContext.uiWebUrl}")
+        
+    except Exception as e:
+        print(f"Failed to create SparkSession: {e}")
+        print(f"Config that failed: {config}")
+        raise
 
     # Configure scheduler pool
     if scheduler_pool not in SPARK_POOLS:
