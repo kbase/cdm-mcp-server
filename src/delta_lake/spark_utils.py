@@ -95,7 +95,6 @@ def get_spark_session(
     delta_lake: bool = True,
     executor_cores: int = DEFAULT_EXECUTOR_CORES,
     scheduler_pool: str = SPARK_DEFAULT_POOL,
-    spark_master_url: str | None = None,
 ) -> SparkSession:
     """
     Helper to get and manage the SparkSession and keep all of our spark configuration params in one place.
@@ -147,28 +146,16 @@ def get_spark_session(
     # Kubernetes configuration
     _validate_env_vars(["SPARK_DRIVER_HOST"], "Kubernetes setup")
     hostname = os.environ["SPARK_DRIVER_HOST"]
+    # Bind to all interfaces
+    config["spark.driver.bindAddress"] = "0.0.0.0"
     if os.environ.get("USE_KUBE_SPAWNER") == "true":
         yarn = False  # YARN is not used in the Kubernetes spawner
-        # Since the Spark driver cannot resolve a pod's hostname without a dedicated service for each user pod,
-        # use the pod IP as the identifier for the Spark driver host
-        config["spark.driver.host"] = socket.gethostbyname(hostname)
-        # In containerized environments, bind to all interfaces to allow connections
-        config["spark.driver.bindAddress"] = "0.0.0.0"
+        # In Kubernetes, use the pod's actual IP address for the driver host
+        # This is equivalent to $(hostname -i) in the working spark-submit command
+        config["spark.driver.host"] = socket.gethostbyname(socket.gethostname())
     else:
         # General driver host configuration - hostname is resolvable
         config["spark.driver.host"] = hostname
-        # Bind to all interfaces for containerized environments
-        config["spark.driver.bindAddress"] = "0.0.0.0"
-
-    # Add timeout and connectivity configurations to prevent hanging
-    config.update({
-        "spark.network.timeout": "300s",
-        "spark.executor.heartbeatInterval": "10s",
-        "spark.dynamicAllocation.executorIdleTimeout": "60s",
-        "spark.dynamicAllocation.cachedExecutorIdleTimeout": "120s",
-        "spark.sql.adaptive.enabled": "true",
-        "spark.sql.adaptive.coalescePartitions.enabled": "true",
-    })
 
     # YARN configuration
     if yarn:
@@ -186,10 +173,7 @@ def get_spark_session(
         config.update(yarn_config)
     else:
         _validate_env_vars(["SPARK_MASTER_URL"], "Standalone Spark setup")
-        if spark_master_url:
-            config["spark.master"] = spark_master_url
-        else:
-            config["spark.master"] = os.environ["SPARK_MASTER_URL"]
+        config["spark.master"] = os.environ["SPARK_MASTER_URL"]
 
     # S3 configuration
     if yarn or delta_lake:
@@ -215,22 +199,9 @@ def get_spark_session(
     # Create SparkConf from accumulated configuration
     spark_conf = SparkConf().setAll(list(config.items()))
 
-    # Initialize SparkSession with better error handling
-    try:
-        print(f"Attempting to create SparkSession with driver host: {config.get('spark.driver.host')}")
-        print(f"Driver bind address: {config.get('spark.driver.bindAddress')}")
-        print(f"Spark master: {config.get('spark.master')}")
-        
-        spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
-        spark.sparkContext.setLogLevel("ERROR")
-        
-        print(f"SparkSession created successfully. Application ID: {spark.sparkContext.applicationId}")
-        print(f"Spark UI: {spark.sparkContext.uiWebUrl}")
-        
-    except Exception as e:
-        print(f"Failed to create SparkSession: {e}")
-        print(f"Config that failed: {config}")
-        raise
+    # Initialize SparkSession
+    spark = SparkSession.builder.config(conf=spark_conf).getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
 
     # Configure scheduler pool
     if scheduler_pool not in SPARK_POOLS:
