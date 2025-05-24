@@ -150,8 +150,7 @@ def get_spark_session(
     config["spark.driver.bindAddress"] = "0.0.0.0"
     if os.environ.get("USE_KUBE_SPAWNER") == "true":
         yarn = False  # YARN is not used in the Kubernetes spawner
-        # In Kubernetes, use the pod's actual IP address for the driver host
-        # This is equivalent to $(hostname -i) in the working spark-submit command
+        # In Kubernetes, use the pod's actual IP address for the driver host (equivalent to $(hostname -i))
         config["spark.driver.host"] = socket.gethostbyname(socket.gethostname())
     else:
         # General driver host configuration - hostname is resolvable
