@@ -146,11 +146,12 @@ def get_spark_session(
     # Kubernetes configuration
     _validate_env_vars(["SPARK_DRIVER_HOST"], "Kubernetes setup")
     hostname = os.environ["SPARK_DRIVER_HOST"]
+    # Bind to all interfaces
+    config["spark.driver.bindAddress"] = "0.0.0.0"
     if os.environ.get("USE_KUBE_SPAWNER") == "true":
         yarn = False  # YARN is not used in the Kubernetes spawner
-        # Since the Spark driver cannot resolve a pod's hostname without a dedicated service for each user pod,
-        # use the pod IP as the identifier for the Spark driver host
-        config["spark.driver.host"] = socket.gethostbyname(hostname)
+        # In Kubernetes, use the pod's actual IP address for the driver host (equivalent to $(hostname -i))
+        config["spark.driver.host"] = socket.gethostbyname(socket.gethostname())
     else:
         # General driver host configuration - hostname is resolvable
         config["spark.driver.host"] = hostname
