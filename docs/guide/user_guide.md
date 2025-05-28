@@ -217,7 +217,7 @@ The CDM MCP Server implements the Model Context Protocol (MCP), allowing AI assi
 
 > **⚠️ Reminder** 
 > 
-> Any data returned by AI generated query will be sent to the AI model host server (e.g. ChatGPT, Anthropic, etc.)—unless you’re running the model locally. Only create or import test datasets that are safe to share publicly when using this service.  
+> Any data returned by AI generated query will be sent to the AI model host server (e.g. ChatGPT, Anthropic, etc.)—unless you're running the model locally. Only create or import test datasets that are safe to share publicly when using this service.  
 
 
 ### MCP Configuration
@@ -245,7 +245,7 @@ The CDM MCP Server implements the Model Context Protocol (MCP), allowing AI assi
 Most MCP‑enabled tools offer two ways to configure a host:
 
 - **Direct JSON import**  
-  Look for an “Import MCP config” or “Load from file” option and point it to your `~/.mcp/mcp.json`.
+  Look for an "Import MCP config" or "Load from file" option and point it to your `~/.mcp/mcp.json`.
 
 - **Manual entry**  
   Open the MCP or API settings, then copy the URL, headers, and other fields from your `mcp.json` into the corresponding inputs.  
@@ -289,7 +289,7 @@ Once configured, you can interact with your Delta tables using natural language.
 
 > **⚠️ Final Warning Before We Phone Home!**  
 > 
-> Any output from an AI generated query will be sent to the remote AI model host—unless you’ve configured your MCP Host to use a locally deployed model.
+> Any output from an AI generated query will be sent to the remote AI model host—unless you've configured your MCP Host to use a locally deployed model.
 
 #### Database Exploration
 ```markdown
@@ -320,3 +320,89 @@ Once configured, you can interact with your Delta tables using natural language.
 - Specify any filters or conditions clearly
 - Use natural language to describe aggregations or calculations
 
+## Using the CDM MCP Server Deployed in Rancher2
+Use the steps below to access the CDM MCP Server deployed in Rancher 2 Kubernetes cluster from your local machine.
+
+> **⚠️ Warning**  
+> 
+> AI query results are sent to a remote host unless using a local model. Ensure your data is public and you have permission from the original author to use it.
+
+### Prerequisites
+- Access to Rancher2 (rancher2.berkeley.kbase.us)
+- KBase CI auth token
+- Rancher CLI tool installed (e.g. `brew install rancher-cli`)
+
+### Step 1: Generate Rancher2 API Keys
+If your browser isn't already set up to use the proxy, please refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel) for instructions on creating an SSH tunnel and configuring your browser to use a SOCKS5 proxy
+
+1. Log into Rancher2 at `https://rancher2.berkeley.kbase.us`
+2. Navigate to **Account & API Keys**
+3. Click **Create API Key** → **Create**
+4. Copy the complete Bearer Token (format: `token-xxxxx:xxxxxxxxxxxxxxxxxxx`)
+    ```bash
+    # Copy the token
+    RANCHER2_TOKEN="token-xxxxx:xxxxxxxxxxxxxxxxxxx"
+    
+    # Optional - save the token to a file
+    echo "$RANCHER2_TOKEN" > ~/.rancher-token
+    chmod 600 ~/.rancher-token
+    ```
+
+### Step 2: Set Up Environment and Login
+1. Create SSH tunnel and configure proxy settings in your terminal:
+    ```bash
+    # Create SSH tunnel (You might already have this running from Step 1)
+    ssh -f -D 1338 <ac.anl_username>@login1.berkeley.kbase.us "/bin/sleep infinity"
+    
+    # Configure proxy settings
+    export HTTP_PROXY="socks5://127.0.0.1:1338"
+    export HTTPS_PROXY="socks5://127.0.0.1:1338"
+    export NO_PROXY="localhost,127.0.0.1"
+    ```
+
+2. Login to Rancher using your API token:
+    ```bash
+    # Option 1: Direct token login
+    rancher login https://rancher2.berkeley.kbase.us/v3 \
+      --token "$RANCHER2_TOKEN"
+
+    # Option 2: More secure - token from file created in Step 1
+    rancher login https://rancher2.berkeley.kbase.us/v3 \
+      --token-file ~/.rancher-token
+    ```
+
+3. Verify the connection:
+    ```bash
+    # List clusters
+    rancher clusters ls
+
+    # List pods in the cdm-jupyterhub namespace
+    rancher kubectl get pods -n cdm-jupyterhub
+    ```
+
+### Step 3: Forward Port to Local Machine
+  ```bash
+  rancher kubectl port-forward service/cdm-mcp-server 8088:8000 -n cdm-jupyterhub
+  ```
+
+This forwards the service port 8000 to your local port 8088.
+
+### Step 4: Update MCP Configuration
+Create or update your MCP configuration file at `~/.mcp/mcp.json`:
+
+> **🔑 Authentication Note**  
+> The currently deployed CDM MCP Server is configured to use **CI KBase auth server**. Please ensure you are using your **CI KBase Auth token** (not production tokens) for authorization.
+
+```json
+{
+  "mcpServers": {
+    "delta-lake-mcp": {
+      "url": "http://localhost:8088/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer YOUR_CI_KBASE_AUTH_TOKEN"
+      }
+    }
+  }
+}
+```
