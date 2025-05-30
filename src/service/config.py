@@ -24,6 +24,7 @@ class Settings(BaseModel):
         "FastAPI service for AI assistants to interact with Delta Lake tables via Spark"
     )
     api_version: str = APP_VERSION
+    service_root_path: str = "/apis/mcp"
     log_level: str = Field(
         default=os.getenv("LOG_LEVEL", "INFO"),
         description="Logging level for the application",
