@@ -62,7 +62,6 @@ def create_application() -> FastAPI:
         title=settings.app_name,
         description=settings.app_description,
         version=settings.api_version,
-        root_path=settings.service_root_path or "",
         responses={
             "4XX": {"model": ErrorResponse},
             "5XX": {"model": ErrorResponse},
@@ -91,21 +90,29 @@ def create_application() -> FastAPI:
     mcp.mount()
     logger.info("MCP server mounted")
 
-    # Add startup and shutdown event handlers
+    # Define startup and shutdown event handlers
     async def startup_event():
         logger.info("Starting application")
         await app_state.build_app(app)
         logger.info("Application started")
-
-    app.add_event_handler("startup", startup_event)
 
     async def shutdown_event():
         logger.info("Shutting down application")
         await app_state.destroy_app_state(app)
         logger.info("Application shut down")
 
-    app.add_event_handler("shutdown", shutdown_event)
-
+    if settings.service_root_path:
+        root_app = FastAPI()
+        root_app.mount(settings.service_root_path, app)
+        
+        root_app.add_event_handler("startup", startup_event)
+        root_app.add_event_handler("shutdown", shutdown_event)
+        
+        return root_app
+    else:
+        app.add_event_handler("startup", startup_event)
+        app.add_event_handler("shutdown", shutdown_event)
+    
     return app
 
 
