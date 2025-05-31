@@ -332,50 +332,26 @@ Use the steps below to access the CDM MCP Server deployed in Rancher 2 Kubernete
 - SSH access to login1.berkeley.kbase.us
 
 ### Step 1: Set Up SSH Tunnel
-Create an SSH tunnel to access the internal KBase network:
+
+Add the following line to your `/etc/hosts` file:
+```
+127.0.0.1 cdmhub.ci.kbase.us
+```
+
+Create an SSH tunnel with port forwarding to access the internal KBase network:
 
 ```bash
-# Create SSH tunnel
-ssh -f -D 1338 <ac.anl_username>@login1.berkeley.kbase.us "/bin/sleep infinity"
+# Create SSH tunnel with port forwarding
+sudo ssh -fN \
+  -L 443:cdmhub.ci.kbase.us:443 \
+  <ac.anl_username>@login1.berkeley.kbase.us
 ```
 
 Replace `<ac.anl_username>` with your actual ANL username.
 
-For more information on how to set up an SSH tunnel, please refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel).
+For more information on SSH tunnels, refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel).
 
-### Step 2: Configure Proxy Settings
-
-#### For Terminal/Command Line Tools
-Set up proxy environment variables in your terminal:
-
-```bash
-export HTTP_PROXY="socks5://127.0.0.1:1338"
-export HTTPS_PROXY="socks5://127.0.0.1:1338"
-export NO_PROXY="localhost,127.0.0.1"
-```
-
-#### For VS Code/Cursor
-Add the following to your VS Code or Cursor settings (`settings.json`):
-
-```json
-{
-  "http.proxy": "socks5://127.0.0.1:1338",
-  "http.proxyStrictSSL": false
-}
-```
-
-**In VS Code/Cursor:**
-1. Open Settings (⌘, on Mac or Ctrl+, on Windows/Linux)
-2. Click the "Open Settings (JSON)" icon in the top right
-3. Add the proxy configuration above to your settings
-
-#### For Other Applications
-Most applications support proxy configuration through:
-- Environment variables (as shown above)
-- Application-specific proxy settings
-- System proxy settings
-
-### Step 3: Update MCP Configuration
+### Step 2: Update MCP Configuration
 Create or update your MCP configuration file at `~/.mcp/mcp.json`:
 
 > **🔑 Authentication Note**  
