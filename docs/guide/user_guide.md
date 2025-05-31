@@ -328,66 +328,30 @@ Use the steps below to access the CDM MCP Server deployed in Rancher 2 Kubernete
 > AI query results are sent to a remote host unless using a local model. Ensure your data is public and you have permission from the original author to use it.
 
 ### Prerequisites
-- Access to Rancher2 (rancher2.berkeley.kbase.us)
 - KBase CI auth token
-- Rancher CLI tool installed (e.g. `brew install rancher-cli`)
+- SSH access to login1.berkeley.kbase.us
 
-### Step 1: Generate Rancher2 API Keys
-If your browser isn't already set up to use the proxy, please refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel) for instructions on creating an SSH tunnel and configuring your browser to use a SOCKS5 proxy
+### Step 1: Set Up SSH Tunnel
 
-1. Log into Rancher2 at `https://rancher2.berkeley.kbase.us`
-2. Navigate to **Account & API Keys**
-3. Click **Create API Key** → **Create**
-4. Copy the complete Bearer Token (format: `token-xxxxx:xxxxxxxxxxxxxxxxxxx`)
-    ```bash
-    # Copy the token
-    RANCHER2_TOKEN="token-xxxxx:xxxxxxxxxxxxxxxxxxx"
-    
-    # Optional - save the token to a file
-    echo "$RANCHER2_TOKEN" > ~/.rancher-token
-    chmod 600 ~/.rancher-token
-    ```
+Add the following line to your `/etc/hosts` file:
+```
+127.0.0.1 cdmhub.ci.kbase.us
+```
 
-### Step 2: Set Up Environment and Login
-1. Create SSH tunnel and configure proxy settings in your terminal:
-    ```bash
-    # Create SSH tunnel (You might already have this running from Step 1)
-    ssh -f -D 1338 <ac.anl_username>@login1.berkeley.kbase.us "/bin/sleep infinity"
-    
-    # Configure proxy settings
-    export HTTP_PROXY="socks5://127.0.0.1:1338"
-    export HTTPS_PROXY="socks5://127.0.0.1:1338"
-    export NO_PROXY="localhost,127.0.0.1"
-    ```
+Create an SSH tunnel with port forwarding to access the internal KBase network:
 
-2. Login to Rancher using your API token:
-    ```bash
-    # Option 1: Direct token login
-    rancher login https://rancher2.berkeley.kbase.us/v3 \
-      --token "$RANCHER2_TOKEN"
+```bash
+# Create SSH tunnel with port forwarding
+sudo ssh -fN \
+  -L 443:cdmhub.ci.kbase.us:443 \
+  <ac.anl_username>@login1.berkeley.kbase.us
+```
 
-    # Option 2: More secure - token from file created in Step 1
-    rancher login https://rancher2.berkeley.kbase.us/v3 \
-      --token-file ~/.rancher-token
-    ```
+Replace `<ac.anl_username>` with your actual ANL username.
 
-3. Verify the connection:
-    ```bash
-    # List clusters
-    rancher clusters ls
+For more information on SSH tunnels, refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel).
 
-    # List pods in the cdm-jupyterhub namespace
-    rancher kubectl get pods -n cdm-jupyterhub
-    ```
-
-### Step 3: Forward Port to Local Machine
-  ```bash
-  rancher kubectl port-forward service/cdm-mcp-server 8088:8000 -n cdm-jupyterhub
-  ```
-
-This forwards the service port 8000 to your local port 8088.
-
-### Step 4: Update MCP Configuration
+### Step 2: Update MCP Configuration
 Create or update your MCP configuration file at `~/.mcp/mcp.json`:
 
 > **🔑 Authentication Note**  
@@ -397,7 +361,7 @@ Create or update your MCP configuration file at `~/.mcp/mcp.json`:
 {
   "mcpServers": {
     "delta-lake-mcp": {
-      "url": "http://localhost:8088/mcp",
+      "url": "https://cdmhub.ci.kbase.us/apis/mcp/mcp",
       "enabled": true,
       "headers": {
         "Authorization": "Bearer YOUR_CI_KBASE_AUTH_TOKEN"
@@ -406,3 +370,26 @@ Create or update your MCP configuration file at `~/.mcp/mcp.json`:
   }
 }
 ```
+
+### Step 3: Cherry Studio SSL Certificate Fix
+
+When using Cherry Studio with the SSH tunnel, you may encounter an SSL certificate error:
+
+```
+Start failed
+Error invoking remote method 'mcp:list-tools': Error:
+[MCP] Error activating server CDM MCP Server: SSE error: TypeError: fetch failed: unable to verify the first certificate
+```
+
+This happens because the SSH tunnel creates a localhost connection, but the SSL certificate is issued for `cdmhub.ci.kbase.us`, causing certificate verification to fail.
+
+**Solution for Cherry Studio (macOS):**
+
+Launch Cherry Studio with SSL verification disabled:
+
+```bash
+NODE_TLS_REJECT_UNAUTHORIZED=0 /Applications/Cherry\ Studio.app/Contents/MacOS/Cherry\ Studio
+```
+`NODE_TLS_REJECT_UNAUTHORIZED=0` disables Node.js SSL certificate verification. This allows the connection to proceed despite certificate validation issues
+
+**Note:** VS Code/Cursor typically handle certificates gracefully and don't require this workaround.
