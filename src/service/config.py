@@ -12,6 +12,7 @@ from functools import lru_cache
 from pydantic import BaseModel, Field
 
 APP_VERSION = "0.1.0"
+SERVICE_ROOT_PATH = "/apis/mcp"
 
 
 class Settings(BaseModel):
@@ -24,7 +25,7 @@ class Settings(BaseModel):
         "FastAPI service for AI assistants to interact with Delta Lake tables via Spark"
     )
     api_version: str = APP_VERSION
-    service_root_path: str = "/apis/mcp"
+    service_root_path: str = SERVICE_ROOT_PATH
     log_level: str = Field(
         default=os.getenv("LOG_LEVEL", "INFO"),
         description="Logging level for the application",

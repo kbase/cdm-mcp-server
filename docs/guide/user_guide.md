@@ -328,66 +328,54 @@ Use the steps below to access the CDM MCP Server deployed in Rancher 2 Kubernete
 > AI query results are sent to a remote host unless using a local model. Ensure your data is public and you have permission from the original author to use it.
 
 ### Prerequisites
-- Access to Rancher2 (rancher2.berkeley.kbase.us)
 - KBase CI auth token
-- Rancher CLI tool installed (e.g. `brew install rancher-cli`)
+- SSH access to login1.berkeley.kbase.us
 
-### Step 1: Generate Rancher2 API Keys
-If your browser isn't already set up to use the proxy, please refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel) for instructions on creating an SSH tunnel and configuring your browser to use a SOCKS5 proxy
+### Step 1: Set Up SSH Tunnel
+Create an SSH tunnel to access the internal KBase network:
 
-1. Log into Rancher2 at `https://rancher2.berkeley.kbase.us`
-2. Navigate to **Account & API Keys**
-3. Click **Create API Key** → **Create**
-4. Copy the complete Bearer Token (format: `token-xxxxx:xxxxxxxxxxxxxxxxxxx`)
-    ```bash
-    # Copy the token
-    RANCHER2_TOKEN="token-xxxxx:xxxxxxxxxxxxxxxxxxx"
-    
-    # Optional - save the token to a file
-    echo "$RANCHER2_TOKEN" > ~/.rancher-token
-    chmod 600 ~/.rancher-token
-    ```
+```bash
+# Create SSH tunnel
+ssh -f -D 1338 <ac.anl_username>@login1.berkeley.kbase.us "/bin/sleep infinity"
+```
 
-### Step 2: Set Up Environment and Login
-1. Create SSH tunnel and configure proxy settings in your terminal:
-    ```bash
-    # Create SSH tunnel (You might already have this running from Step 1)
-    ssh -f -D 1338 <ac.anl_username>@login1.berkeley.kbase.us "/bin/sleep infinity"
-    
-    # Configure proxy settings
-    export HTTP_PROXY="socks5://127.0.0.1:1338"
-    export HTTPS_PROXY="socks5://127.0.0.1:1338"
-    export NO_PROXY="localhost,127.0.0.1"
-    ```
+Replace `<ac.anl_username>` with your actual ANL username.
 
-2. Login to Rancher using your API token:
-    ```bash
-    # Option 1: Direct token login
-    rancher login https://rancher2.berkeley.kbase.us/v3 \
-      --token "$RANCHER2_TOKEN"
+For more information on how to set up an SSH tunnel, please refer to the [CDM JupyterHub User Guide](https://github.com/kbase/cdm-jupyterhub/blob/main/docs/user_guide.md#1-create-ssh-tunnel).
 
-    # Option 2: More secure - token from file created in Step 1
-    rancher login https://rancher2.berkeley.kbase.us/v3 \
-      --token-file ~/.rancher-token
-    ```
+### Step 2: Configure Proxy Settings
 
-3. Verify the connection:
-    ```bash
-    # List clusters
-    rancher clusters ls
+#### For Terminal/Command Line Tools
+Set up proxy environment variables in your terminal:
 
-    # List pods in the cdm-jupyterhub namespace
-    rancher kubectl get pods -n cdm-jupyterhub
-    ```
+```bash
+export HTTP_PROXY="socks5://127.0.0.1:1338"
+export HTTPS_PROXY="socks5://127.0.0.1:1338"
+export NO_PROXY="localhost,127.0.0.1"
+```
 
-### Step 3: Forward Port to Local Machine
-  ```bash
-  rancher kubectl port-forward service/cdm-mcp-server 8088:8000 -n cdm-jupyterhub
-  ```
+#### For VS Code/Cursor
+Add the following to your VS Code or Cursor settings (`settings.json`):
 
-This forwards the service port 8000 to your local port 8088.
+```json
+{
+  "http.proxy": "socks5://127.0.0.1:1338",
+  "http.proxyStrictSSL": false
+}
+```
 
-### Step 4: Update MCP Configuration
+**In VS Code/Cursor:**
+1. Open Settings (⌘, on Mac or Ctrl+, on Windows/Linux)
+2. Click the "Open Settings (JSON)" icon in the top right
+3. Add the proxy configuration above to your settings
+
+#### For Other Applications
+Most applications support proxy configuration through:
+- Environment variables (as shown above)
+- Application-specific proxy settings
+- System proxy settings
+
+### Step 3: Update MCP Configuration
 Create or update your MCP configuration file at `~/.mcp/mcp.json`:
 
 > **🔑 Authentication Note**  
@@ -397,7 +385,7 @@ Create or update your MCP configuration file at `~/.mcp/mcp.json`:
 {
   "mcpServers": {
     "delta-lake-mcp": {
-      "url": "http://localhost:8088/mcp",
+      "url": "https://cdmhub.ci.kbase.us/apis/mcp/mcp",
       "enabled": true,
       "headers": {
         "Authorization": "Bearer YOUR_CI_KBASE_AUTH_TOKEN"
