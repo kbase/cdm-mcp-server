@@ -370,3 +370,26 @@ Create or update your MCP configuration file at `~/.mcp/mcp.json`:
   }
 }
 ```
+
+### Step 3: Cherry Studio SSL Certificate Fix
+
+When using Cherry Studio with the SSH tunnel, you may encounter an SSL certificate error:
+
+```
+Start failed
+Error invoking remote method 'mcp:list-tools': Error:
+[MCP] Error activating server CDM MCP Server: SSE error: TypeError: fetch failed: unable to verify the first certificate
+```
+
+This happens because the SSH tunnel creates a localhost connection, but the SSL certificate is issued for `cdmhub.ci.kbase.us`, causing certificate verification to fail.
+
+**Solution for Cherry Studio (macOS):**
+
+Launch Cherry Studio with SSL verification disabled:
+
+```bash
+NODE_TLS_REJECT_UNAUTHORIZED=0 /Applications/Cherry\ Studio.app/Contents/MacOS/Cherry\ Studio
+```
+`NODE_TLS_REJECT_UNAUTHORIZED=0` disables Node.js SSL certificate verification. This allows the connection to proceed despite certificate validation issues
+
+**Note:** VS Code/Cursor typically handle certificates gracefully and don't require this workaround.
