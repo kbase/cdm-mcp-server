@@ -90,21 +90,55 @@ def create_application() -> FastAPI:
     mcp.mount()
     logger.info("MCP server mounted")
 
-    # Add startup and shutdown event handlers
+    # Define startup and shutdown event handlers
     async def startup_event():
         logger.info("Starting application")
         await app_state.build_app(app)
         logger.info("Application started")
-
-    app.add_event_handler("startup", startup_event)
 
     async def shutdown_event():
         logger.info("Shutting down application")
         await app_state.destroy_app_state(app)
         logger.info("Application shut down")
 
-    app.add_event_handler("shutdown", shutdown_event)
-
+    # Handle service root path mounting for proper URL routing
+    # This is critical for preventing double path prefixes in MCP client requests
+    if settings.service_root_path:
+        # Create a root FastAPI application to handle path mounting
+        # This prevents the MCP client from incorrectly constructing URLs
+        root_app = FastAPI()
+        
+        # Mount the main app at the specified root path (e.g., "/apis/mcp")
+        # This creates the following URL structure:
+        # - Root app handles: /
+        # - Main app handles: /apis/mcp/*
+        # - MCP endpoint becomes: /apis/mcp/mcp
+        #
+        # WHY THIS WORKS:
+        # Without this mounting structure, when the MCP client discovers the server
+        # at "https://cdmhub.ci.kbase.us/apis/mcp/mcp", it incorrectly assumes
+        # the base URL is "https://cdmhub.ci.kbase.us" and then tries to construct
+        # tool calls by appending the discovered path again, resulting in:
+        # "https://cdmhub.ci.kbase.us/apis/mcp/apis/mcp/mcp" (double /apis/mcp)
+        #
+        # With proper mounting:
+        # 1. The root app serves at the domain root
+        # 2. The main app is mounted at /apis/mcp
+        # 3. MCP endpoint is accessible at /apis/mcp/mcp
+        # 4. MCP client correctly identifies the base as the mounted path
+        # 5. Tool calls are made to /apis/mcp/tools/call (correct path)
+        root_app.mount(settings.service_root_path, app)
+        
+        # Event handlers must be attached to the root app since it's what gets served
+        root_app.add_event_handler("startup", startup_event)
+        root_app.add_event_handler("shutdown", shutdown_event)
+        
+        return root_app
+    else:
+        # No root path mounting needed - serve the app directly
+        app.add_event_handler("startup", startup_event)
+        app.add_event_handler("shutdown", shutdown_event)
+    
     return app
 
 
