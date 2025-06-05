@@ -21,11 +21,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DELTALAKE_WAREHOUSE_DIR=s3a://cdm-lake/warehouse
-      - SPARK_JOB_LOG_DIR=s3a://cdm-spark-job-logs/spark-job-logs
-      - SPARK_JOB_LOG_DIR_CATEGORY=master
-      - MINIO_URL=http://minio:9002
-      - MINIO_LOG_USER_ACCESS_KEY=minio-log-access
-      - MINIO_LOG_USER_SECRET_KEY=minio123
     volumes:
       - ./cdr/cdm/jupyter/cdm_shared_workspace:/cdm_shared_workspace
     networks:
@@ -50,11 +45,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DELTALAKE_WAREHOUSE_DIR=s3a://cdm-lake/warehouse
-      - SPARK_JOB_LOG_DIR=s3a://cdm-spark-job-logs/spark-job-logs
-      - SPARK_JOB_LOG_DIR_CATEGORY=worker1
-      - MINIO_URL=http://minio:9002
-      - MINIO_LOG_USER_ACCESS_KEY=minio-log-access
-      - MINIO_LOG_USER_SECRET_KEY=minio123
     volumes:
       - ./cdr/cdm/jupyter/cdm_shared_workspace:/cdm_shared_workspace
     networks:
@@ -79,11 +69,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DELTALAKE_WAREHOUSE_DIR=s3a://cdm-lake/warehouse
-      - SPARK_JOB_LOG_DIR=s3a://cdm-spark-job-logs/spark-job-logs
-      - SPARK_JOB_LOG_DIR_CATEGORY=worker2
-      - MINIO_URL=http://minio:9002
-      - MINIO_LOG_USER_ACCESS_KEY=minio-log-access
-      - MINIO_LOG_USER_SECRET_KEY=minio123
     volumes:
       - ./cdr/cdm/jupyter/cdm_shared_workspace:/cdm_shared_workspace
     networks:
