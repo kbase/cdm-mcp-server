@@ -11,7 +11,7 @@ dependencies = [
     "mcp==1.9.2",
     "pyspark==3.5.5",
     "delta-spark==3.3.2",
-    "aiohttp==3.12.8",
+    "aiohttp==3.12.13",
     "cacheout==0.16.0",
     "minio==7.2.15",
     "psycopg==3.2.9",
