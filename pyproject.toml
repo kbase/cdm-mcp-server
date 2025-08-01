@@ -13,7 +13,7 @@ dependencies = [
     "delta-spark==3.3.2",
     "aiohttp==3.12.8",
     "cacheout==0.16.0",
-    "minio==7.2.15",
+    "minio==7.2.16",
     "psycopg==3.2.9",
     "sqlparse==0.5.3",
 ]
