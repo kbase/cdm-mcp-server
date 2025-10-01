@@ -14,7 +14,7 @@ dependencies = [
     "aiohttp==3.12.8",
     "cacheout==0.16.0",
     "minio==7.2.15",
-    "psycopg==3.2.9",
+    "psycopg==3.2.10",
     "sqlparse==0.5.3",
 ]
 
